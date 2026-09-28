@@ -16,8 +16,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import connect, disconnect, is_client_generated
-from app.routers import admin, auth, chat, goals, profile, symptoms, wellness
-from app.services.scheduler import start_scheduler, stop_scheduler
+from app.routers import admin, auth, chat, profile, symptoms
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("healthassistant")
@@ -29,11 +28,9 @@ async def lifespan(app: FastAPI):
         await connect()
     else:  # pragma: no cover
         logger.error(
-            "Prisma client not generated. Run: cd backend && npm run prisma:generate"
+            "Prisma client not generated. Run: python -m prisma generate"
         )
-    start_scheduler()
     yield
-    stop_scheduler()
     await disconnect()
 
 
@@ -41,8 +38,7 @@ app = FastAPI(
     title="AI Health Assistant API",
     description=(
         "Backend for the AI Health Assistant: authentication, health profile, "
-        "Groq-powered health Q&A, symptom checker, red-flag alerts, wellness "
-        "tracking, goals, reminders, AI tips and the admin dashboard.\n\n"
+        "Groq-powered health Q&A, symptom checker, red-flag alerts and admin dashboard.\n\n"
         "**Disclaimer:** general health information only - not a diagnosis and "
         "not a substitute for a doctor."
     ),
@@ -65,9 +61,6 @@ app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(chat.router)
 app.include_router(symptoms.router)
-app.include_router(wellness.router)
-app.include_router(goals.router)
-app.include_router(goals.reminder_router)
 app.include_router(admin.router)
 
 

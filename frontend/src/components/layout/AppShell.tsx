@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Activity,
   BarChart3,
   Bot,
   ClipboardList,
@@ -13,9 +12,7 @@ import {
   LogOut,
   Menu,
   ShieldCheck,
-  Sparkles,
   Stethoscope,
-  Target,
   UserRound,
   X,
 } from "lucide-react";
@@ -28,9 +25,6 @@ const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/chat", label: "Ask AI", icon: Bot },
   { href: "/symptoms", label: "Symptom Check", icon: Stethoscope },
-  { href: "/wellness", label: "Wellness", icon: Activity },
-  { href: "/goals", label: "Goals & Reminders", icon: Target },
-  { href: "/tips", label: "AI Tips", icon: Sparkles },
   { href: "/history", label: "History", icon: ClipboardList },
   { href: "/profile", label: "Health Profile", icon: UserRound },
 ];
@@ -84,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="leading-tight">
             <p className="text-sm font-semibold">AI Health Assistant</p>
-            <p className="text-xs text-muted-foreground">Questions · Symptoms · Wellness</p>
+            <p className="text-xs text-muted-foreground">Questions & Symptoms Assistant</p>
           </div>
           <button className="ml-auto lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
             <X className="h-4 w-4" />

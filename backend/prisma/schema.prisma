@@ -1,6 +1,6 @@
 // AI Health Assistant - Prisma schema (MongoDB)
 // Collections: users, health_profiles, conversations, messages,
-// symptom_checks, wellness_logs, goals, reminders, flagged_chats, admin_settings
+// symptom_checks, flagged_chats, admin_settings
 
 generator client {
   provider = "prisma-client-py"
@@ -28,9 +28,6 @@ model User {
   profile        HealthProfile?
   conversations  Conversation[]
   symptomChecks  SymptomCheck[]
-  wellnessLogs   WellnessLog[]
-  goals          Goal[]
-  reminders      Reminder[]
   flaggedChats   FlaggedChat[]
 
   @@map("users")
@@ -107,68 +104,6 @@ model SymptomCheck {
 
   @@index([userId])
   @@map("symptom_checks")
-}
-
-// ------------------------------------------------------- wellness_logs
-model WellnessLog {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String   @db.ObjectId
-  logDate         String // YYYY-MM-DD - one entry per user per day
-  waterGlasses    Int?     @default(0)
-  sleepHours      Float?   @default(0)
-  steps           Int?     @default(0)
-  exerciseMinutes Int?     @default(0)
-  mood            String? // great | good | okay | low | bad
-  weightKg        Float?
-  note            String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, logDate])
-  @@index([userId])
-  @@map("wellness_logs")
-}
-
-// ---------------------------------------------------------------- goals
-model Goal {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId     String   @db.ObjectId
-  type       String // water | sleep | steps | exercise | weight | mood | custom
-  title      String
-  target     Float
-  unit       String   @default("")
-  frequency  String   @default("daily") // daily | weekly
-  progress   Float    @default(0)
-  streak     Int      @default(0)
-  isActive   Boolean  @default(true)
-  lastUpdatedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("goals")
-}
-
-// ------------------------------------------------------------ reminders
-model Reminder {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String   @db.ObjectId
-  title           String
-  type            String   @default("custom")
-  time            String // HH:MM
-  frequency       String   @default("daily") // daily | weekly
-  days            String[] @default([])
-  isActive        Boolean  @default(true)
-  lastTriggeredAt DateTime?
-  createdAt       DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("reminders")
 }
 
 // -------------------------------------------------------- flagged_chats

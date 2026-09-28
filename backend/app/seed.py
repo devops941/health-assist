@@ -72,44 +72,6 @@ async def seed() -> None:
     else:
         await db.healthprofile.update(where={"userId": demo.id}, data=profile_data)
 
-    existing_logs = await db.wellnesslog.count(where={"userId": demo.id})
-    if existing_logs == 0:
-        moods = ["great", "good", "okay", "low"]
-        for offset in range(13, -1, -1):
-            day = (date.today() - timedelta(days=offset)).isoformat()
-            await db.wellnesslog.create(
-                data={
-                    "userId": demo.id,
-                    "logDate": day,
-                    "waterGlasses": random.randint(4, 10),
-                    "sleepHours": round(random.uniform(5.5, 8.5), 1),
-                    "steps": random.randint(3000, 12000),
-                    "exerciseMinutes": random.randint(0, 60),
-                    "mood": random.choice(moods),
-                    "weightKg": round(62 + random.uniform(-1.5, 1.5), 1),
-                }
-            )
-        print("Seeded 14 wellness logs for the demo user")
-
-    if await db.goal.count(where={"userId": demo.id}) == 0:
-        await db.goal.create_many(
-            data=[
-                {"userId": demo.id, "type": "water", "title": "Drink 8 glasses of water", "target": 8, "unit": "glasses", "progress": 6, "streak": 3},
-                {"userId": demo.id, "type": "sleep", "title": "Sleep 7 hours", "target": 7, "unit": "hours", "progress": 7, "streak": 5},
-                {"userId": demo.id, "type": "steps", "title": "Walk 8000 steps", "target": 8000, "unit": "steps", "progress": 5400, "streak": 2},
-            ]
-        )
-        print("Seeded demo goals")
-
-    if await db.reminder.count(where={"userId": demo.id}) == 0:
-        await db.reminder.create_many(
-            data=[
-                {"userId": demo.id, "title": "Drink water", "type": "water", "time": "10:00", "frequency": "daily"},
-                {"userId": demo.id, "title": "Take inhaler", "type": "medicine", "time": "08:00", "frequency": "daily"},
-                {"userId": demo.id, "title": "Evening walk", "type": "activity", "time": "18:30", "frequency": "weekly", "days": ["mon", "wed", "fri"]},
-            ]
-        )
-        print("Seeded demo reminders")
 
     if await db.adminsetting.find_unique(where={"key": "safety_rules"}) is None:
         await db.adminsetting.create(

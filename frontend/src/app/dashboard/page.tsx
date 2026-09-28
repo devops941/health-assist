@@ -3,45 +3,38 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
-  Activity,
   ArrowRight,
   Bot,
-  Droplets,
-  Footprints,
-  Moon,
-  Sparkles,
+  ClipboardList,
+  MessageSquare,
+  ShieldAlert,
   Stethoscope,
-  Target,
+  UserRound,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { StatCard } from "@/components/health/StatCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { EmptyState, PageLoader } from "@/components/ui/feedback";
 import { http } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import type { Goal, SymptomCheck, WellnessSummary } from "@/types";
+import type { Conversation, SymptomCheck } from "@/types";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [summary, setSummary] = useState<WellnessSummary | null>(null);
-  const [goals, setGoals] = useState<Goal[]>([]);
   const [checks, setChecks] = useState<SymptomCheck[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
-      const [summaryRes, goalsRes, checksRes] = await Promise.allSettled([
-        http.get<WellnessSummary>("/api/wellness/summary?days=7"),
-        http.get<Goal[]>("/api/goals"),
+      const [checksRes, conversationsRes] = await Promise.allSettled([
         http.get<SymptomCheck[]>("/api/symptoms/history"),
+        http.get<Conversation[]>("/api/chat/conversations"),
       ]);
-      if (summaryRes.status === "fulfilled") setSummary(summaryRes.value);
-      if (goalsRes.status === "fulfilled") setGoals(goalsRes.value);
-      if (checksRes.status === "fulfilled") setChecks(checksRes.value.slice(0, 3));
+      if (checksRes.status === "fulfilled") setChecks(checksRes.value.slice(0, 4));
+      if (conversationsRes.status === "fulfilled") setConversations(conversationsRes.value.slice(0, 4));
     } finally {
       setLoading(false);
     }
@@ -50,10 +43,6 @@ export default function DashboardPage() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  const averages = summary?.averages ?? {};
-  const logCount = summary?.logCount ?? 0;
-  const activeGoals = goals.filter((goal) => goal.isActive);
 
   return (
     <AppShell>
@@ -64,14 +53,14 @@ export default function DashboardPage() {
               {user?.fullName ? `Hello, ${user.fullName.split(" ")[0]}` : "Dashboard"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Here is how your last 7 days look, plus a few things you can act on.
+              Welcome to your AI Health Assistant. Ask questions or run a symptom check.
             </p>
           </div>
           <div className="flex gap-2">
             <Link href="/chat">
               <Button className="gap-2">
                 <Bot className="h-4 w-4" />
-                Ask the assistant
+                Ask AI Assistant
               </Button>
             </Link>
             <Link href="/symptoms">
@@ -88,74 +77,101 @@ export default function DashboardPage() {
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                label="Water / day"
-                value={`${(averages.waterGlasses ?? 0).toFixed(1)}`}
-                hint="glasses, 7-day average"
-                icon={<Droplets className="h-5 w-5" />}
-                accent="sky"
-              />
-              <StatCard
-                label="Sleep / night"
-                value={`${(averages.sleepHours ?? 0).toFixed(1)}h`}
-                hint="7-day average"
-                icon={<Moon className="h-5 w-5" />}
-                accent="primary"
-              />
-              <StatCard
-                label="Steps / day"
-                value={Math.round(averages.steps ?? 0).toLocaleString()}
-                hint="7-day average"
-                icon={<Footprints className="h-5 w-5" />}
-                accent="emerald"
-              />
-              <StatCard
-                label="Days logged"
-                value={`${logCount}/7`}
-                hint={logCount >= 5 ? "Great consistency" : "Keep logging daily"}
-                icon={<Activity className="h-5 w-5" />}
-                accent="amber"
-              />
+              <Card className="transition-all hover:shadow-sm">
+                <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-sm font-medium">Ask AI Assistant</CardTitle>
+                  <Bot className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">Groq LLM</p>
+                  <p className="text-xs text-muted-foreground mt-1">Streaming Q&A Chatbot</p>
+                  <Link href="/chat" className="mt-3 inline-flex items-center text-xs font-medium text-primary hover:underline">
+                    Start conversation <ArrowRight className="ml-1 h-3 w-3" />
+                  </Link>
+                </CardContent>
+              </Card>
+
+              <Card className="transition-all hover:shadow-sm">
+                <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-sm font-medium">Symptom Checker</CardTitle>
+                  <Stethoscope className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">{checks.length} Checks</p>
+                  <p className="text-xs text-muted-foreground mt-1">Guided assessments</p>
+                  <Link href="/symptoms" className="mt-3 inline-flex items-center text-xs font-medium text-primary hover:underline">
+                    Run symptom check <ArrowRight className="ml-1 h-3 w-3" />
+                  </Link>
+                </CardContent>
+              </Card>
+
+              <Card className="transition-all hover:shadow-sm">
+                <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-sm font-medium">Safety Engine</CardTitle>
+                  <ShieldAlert className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">Active</p>
+                  <p className="text-xs text-muted-foreground mt-1">Red-flag emergency detection</p>
+                  <span className="mt-3 inline-block text-xs text-emerald-600 font-medium">
+                    ✓ Real-time protection
+                  </span>
+                </CardContent>
+              </Card>
+
+              <Card className="transition-all hover:shadow-sm">
+                <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-sm font-medium">Health Profile</CardTitle>
+                  <UserRound className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">Configured</p>
+                  <p className="text-xs text-muted-foreground mt-1">Personalized advice context</p>
+                  <Link href="/profile" className="mt-3 inline-flex items-center text-xs font-medium text-primary hover:underline">
+                    Edit profile <ArrowRight className="ml-1 h-3 w-3" />
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
               <Card className="lg:col-span-2">
                 <CardHeader className="flex-row items-center justify-between space-y-0">
                   <div>
-                    <CardTitle>Active goals</CardTitle>
-                    <CardDescription>Your daily habits and streaks</CardDescription>
+                    <CardTitle>Recent AI Conversations</CardTitle>
+                    <CardDescription>Your Q&A chat history with the assistant</CardDescription>
                   </div>
-                  <Link href="/goals" className="text-sm font-medium text-primary hover:underline">
-                    Manage
+                  <Link href="/history" className="text-sm font-medium text-primary hover:underline">
+                    View all
                   </Link>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {activeGoals.length === 0 ? (
+                <CardContent className="space-y-3">
+                  {conversations.length === 0 ? (
                     <EmptyState
-                      icon={<Target className="h-6 w-6" />}
-                      title="No goals yet"
-                      description="Set a small daily goal to start building momentum."
+                      icon={<MessageSquare className="h-6 w-6" />}
+                      title="No conversations yet"
+                      description="Start a chat with the assistant to ask health-related questions."
                       action={
-                        <Link href="/goals">
-                          <Button size="sm">Create a goal</Button>
+                        <Link href="/chat">
+                          <Button size="sm">Start a conversation</Button>
                         </Link>
                       }
                     />
                   ) : (
-                    activeGoals.slice(0, 4).map((goal) => (
-                      <div key={goal.id} className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-3 text-sm">
-                          <span className="font-medium">{goal.title}</span>
-                          <span className="shrink-0 tabular-nums text-muted-foreground">
-                            {goal.progress}/{goal.target} {goal.unit}
-                          </span>
+                    conversations.map((conv) => (
+                      <Link
+                        key={conv.id}
+                        href="/chat"
+                        className="flex items-center justify-between rounded-lg border p-3.5 transition-colors hover:bg-accent/50"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate text-sm">{conv.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {formatDate(conv.updatedAt ?? conv.createdAt)} · {conv.messageCount} messages
+                          </p>
                         </div>
-                        <Progress value={goal.progress} max={goal.target} />
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {goal.streak > 0 && <Badge variant="success">{goal.streak} day streak</Badge>}
-                          <span className="capitalize">{goal.frequency}</span>
-                        </div>
-                      </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 ml-3" />
+                      </Link>
                     ))
                   )}
                 </CardContent>
@@ -170,9 +186,8 @@ export default function DashboardPage() {
                   {[
                     { href: "/chat", label: "Ask a health question", icon: Bot },
                     { href: "/symptoms", label: "Run a symptom check", icon: Stethoscope },
-                    { href: "/wellness", label: "Log today's wellness", icon: Activity },
-                    { href: "/tips", label: "Get AI wellness tips", icon: Sparkles },
-                    { href: "/history", label: "Review past activity", icon: Target },
+                    { href: "/profile", label: "Update health profile", icon: UserRound },
+                    { href: "/history", label: "Review past activity", icon: ClipboardList },
                   ].map(({ href, label, icon: Icon }) => (
                     <Link
                       key={href}

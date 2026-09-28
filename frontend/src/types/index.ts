@@ -74,54 +74,6 @@ export interface SymptomCheck {
   createdAt?: string;
 }
 
-export interface WellnessLog {
-  id: string;
-  logDate: string;
-  waterGlasses?: number | null;
-  sleepHours?: number | null;
-  steps?: number | null;
-  exerciseMinutes?: number | null;
-  mood?: string | null;
-  weightKg?: number | null;
-  note?: string | null;
-}
-
-export interface WellnessSummary {
-  range: string;
-  totals: Record<string, number>;
-  averages: Record<string, number>;
-  series: Array<Record<string, number | string | null>>;
-  logCount: number;
-}
-
-export interface Goal {
-  id: string;
-  type: string;
-  title: string;
-  target: number;
-  unit: string;
-  frequency: string;
-  progress: number;
-  streak: number;
-  isActive: boolean;
-}
-
-export interface Reminder {
-  id: string;
-  title: string;
-  type: string;
-  time: string;
-  frequency: string;
-  days: string[];
-  isActive: boolean;
-  lastTriggeredAt?: string | null;
-}
-
-export interface WellnessTips {
-  headline: string;
-  tips: Array<{ area: string; tip: string }>;
-  focus_area: string;
-}
 
 export interface AdminStats {
   totalUsers: number;
