@@ -1,0 +1,202 @@
+// AI Health Assistant - Prisma schema (MongoDB)
+// Collections: users, health_profiles, conversations, messages,
+// symptom_checks, wellness_logs, goals, reminders, flagged_chats, admin_settings
+
+generator client {
+  provider = "prisma-client-py"
+  output   = "../prisma_client"
+  interface = "asyncio"
+  recursive_type_depth = 5
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- users
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         String   @default("USER") // USER | ADMIN
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile        HealthProfile?
+  conversations  Conversation[]
+  symptomChecks  SymptomCheck[]
+  wellnessLogs   WellnessLog[]
+  goals          Goal[]
+  reminders      Reminder[]
+  flaggedChats   FlaggedChat[]
+
+  @@map("users")
+}
+
+// ------------------------------------------------------- health_profiles
+model HealthProfile {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @unique @db.ObjectId
+  age          Int?
+  gender       String?
+  heightCm     Float?
+  weightKg     Float?
+  bloodGroup   String?
+  allergies    String[] @default([])
+  conditions   String[] @default([])
+  medications  String[] @default([])
+  activityLevel String?  @default("moderate")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("health_profiles")
+}
+
+// ------------------------------------------------------- conversations
+model Conversation {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  title     String   @default("New conversation")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([userId])
+  @@map("conversations")
+}
+
+// ------------------------------------------------------------ messages
+model Message {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String   @db.ObjectId
+  role           String // user | assistant | system
+  content        String
+  flagged        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+// ------------------------------------------------------ symptom_checks
+model SymptomCheck {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  symptoms        String[] @default([])
+  duration        String?
+  severity        String? // mild | moderate | severe
+  answers         String?
+  possibleCauses  String[] @default([])
+  selfCare        String[] @default([])
+  whenToSeeDoctor String?
+  urgency         String   @default("routine") // routine | soon | urgent | emergency
+  redFlag         Boolean  @default(false)
+  summary         String?
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("symptom_checks")
+}
+
+// ------------------------------------------------------- wellness_logs
+model WellnessLog {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  logDate         String // YYYY-MM-DD - one entry per user per day
+  waterGlasses    Int?     @default(0)
+  sleepHours      Float?   @default(0)
+  steps           Int?     @default(0)
+  exerciseMinutes Int?     @default(0)
+  mood            String? // great | good | okay | low | bad
+  weightKg        Float?
+  note            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, logDate])
+  @@index([userId])
+  @@map("wellness_logs")
+}
+
+// ---------------------------------------------------------------- goals
+model Goal {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  type       String // water | sleep | steps | exercise | weight | mood | custom
+  title      String
+  target     Float
+  unit       String   @default("")
+  frequency  String   @default("daily") // daily | weekly
+  progress   Float    @default(0)
+  streak     Int      @default(0)
+  isActive   Boolean  @default(true)
+  lastUpdatedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("goals")
+}
+
+// ------------------------------------------------------------ reminders
+model Reminder {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  title           String
+  type            String   @default("custom")
+  time            String // HH:MM
+  frequency       String   @default("daily") // daily | weekly
+  days            String[] @default([])
+  isActive        Boolean  @default(true)
+  lastTriggeredAt DateTime?
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("reminders")
+}
+
+// -------------------------------------------------------- flagged_chats
+model FlaggedChat {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String?  @db.ObjectId
+  conversationId String?  @db.ObjectId
+  messageId      String?  @db.ObjectId
+  content        String
+  matchedRules   String[] @default([])
+  severity       String   @default("high") // high | critical
+  source         String   @default("chat") // chat | symptom_check
+  reviewed       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("flagged_chats")
+}
+
+// -------------------------------------------------------- admin_settings
+model AdminSetting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  value     String   // JSON-encoded string (Prisma Python has no Mongo Json scalar)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_settings")
+}

@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 160 30% 98%;
+    --foreground: 200 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 200 25% 12%;
+
+    --primary: 168 76% 32%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 165 30% 94%;
+    --secondary-foreground: 200 25% 18%;
+
+    --muted: 165 20% 95%;
+    --muted-foreground: 200 12% 45%;
+
+    --accent: 190 70% 94%;
+    --accent-foreground: 200 40% 22%;
+
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 170 18% 88%;
+    --input: 170 18% 88%;
+    --ring: 168 76% 32%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 200 30% 8%;
+    --foreground: 160 20% 96%;
+    --card: 200 28% 11%;
+    --card-foreground: 160 20% 96%;
+    --primary: 168 70% 45%;
+    --primary-foreground: 200 30% 8%;
+    --secondary: 200 20% 18%;
+    --secondary-foreground: 160 20% 96%;
+    --muted: 200 20% 16%;
+    --muted-foreground: 165 12% 65%;
+    --accent: 195 30% 20%;
+    --accent-foreground: 160 20% 96%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 200 18% 22%;
+    --input: 200 18% 22%;
+    --ring: 168 70% 45%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .prose-health p {
+    margin-bottom: 0.75rem;
+    line-height: 1.7;
+  }
+  .prose-health ul {
+    list-style: disc;
+    padding-left: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .prose-health li {
+    margin-bottom: 0.25rem;
+    line-height: 1.65;
+  }
+  .prose-health strong {
+    font-weight: 600;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
